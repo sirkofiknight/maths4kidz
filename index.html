@@ -38,17 +38,29 @@
   -webkit-tap-highlight-color: transparent;
   overflow-wrap: break-word;
 }
-html{scroll-behavior:smooth;font-size:16px;}
-body{
-  background:#ffffff;
-  font-family:'Nunito',sans-serif;
-  min-height:100vh;
-  overflow-x:hidden;
-  -webkit-font-smoothing:antialiased;
+html, body {
+  height: 100vh;
+  height: -webkit-fill-available;
+  overflow: hidden;
+  scroll-behavior: smooth;
+}
+body {
+  background: #ffffff;
+  font-family: 'Nunito', sans-serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ===== LAYOUT ===== */
-.app-shell{display:flex;flex-direction:column;min-height:100vh;}
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: -webkit-fill-available;
+  overflow: hidden;
+}
 
 /* ===== HEADER ===== */
 .app-header{
@@ -120,17 +132,19 @@ body{
 .side-nav-item .nav-badge{margin-left:auto;background:rgba(255,255,255,0.35);border-radius:50px;padding:1px 7px;font-size:0.7rem;font-weight:900;}
 
 /* ===== MAIN CONTENT ===== */
-.main-content{
-  flex:1;min-width:0;
-  padding:20px 16px 120px;
-  overflow-y:auto;
-  background:#f7f9fc; /* Soft surface color */
+.main-content {
+  flex: 1;
+  min-width: 0;
+  padding: 20px 16px 120px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: #f7f9fc;
 }
 @media(min-width:768px){
   .main-content{padding:28px 28px 40px;}
 }
 @media(min-width:1024px){
-  .main-content{padding:32px 40px 40px;max-width:860px;}
+  .main-content{padding:32px 40px 40px;max-width:860px;margin: 0 auto;}
 }
 
 /* ===== SECTION PANELS ===== */
@@ -674,7 +688,6 @@ input[type=range]::-webkit-slider-thumb{
   .bottom-nav{display:flex;}
   .main-content{
     padding:12px 12px calc(var(--bottom-nav-h) + 60px);
-    overscroll-behavior-y: contain;
   }
   .app-header{height:56px;padding:0 12px;}
   .app-title{font-size:1.1rem;}
@@ -1435,39 +1448,7 @@ input[type=range]::-webkit-slider-thumb{
 </div>
 
 <script>
-// ============================================================
-// SOUND & HAPTICS ENGINE
-// ============================================================
-const SoundEngine = {
-  ctx: null,
-  init() { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
-  play(type) {
-    if (!this.ctx) this.init();
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.connect(gain);
-    gain.connect(this.ctx.destination);
-    
-    const now = this.ctx.currentTime;
-    if (type === 'pop') {
-      osc.type = 'sine'; osc.frequency.setValueAtTime(400, now);
-      osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
-      gain.gain.setValueAtTime(0.3, now); gain.gain.linearRampToValueAtTime(0, now + 0.1);
-      osc.start(); osc.stop(now + 0.1);
-    } else if (type === 'ding') {
-      osc.type = 'triangle'; osc.frequency.setValueAtTime(600, now);
-      osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
-      gain.gain.setValueAtTime(0.2, now); gain.gain.linearRampToValueAtTime(0, now + 0.3);
-      osc.start(); osc.stop(now + 0.3);
-    } else if (type === 'error') {
-      osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, now);
-      osc.frequency.linearRampToValueAtTime(100, now + 0.2);
-      gain.gain.setValueAtTime(0.2, now); gain.gain.linearRampToValueAtTime(0, now + 0.2);
-      osc.start(); osc.stop(now + 0.2);
-    }
-  },
-  vibrate(ms = 50) { if (navigator.vibrate) navigator.vibrate(ms); }
-};
+
 
 // ============================================================
 // ADVENTURE BUDDY LOGIC
@@ -1487,7 +1468,6 @@ const Buddy = {
     const msgs = this.messages[type] || this.messages.idle;
     box.textContent = msgs[Math.floor(Math.random() * msgs.length)];
     box.classList.add('show');
-    SoundEngine.play('pop');
     if (this.timer) clearTimeout(this.timer);
     this.timer = setTimeout(() => box.classList.remove('show'), 3500);
   },
@@ -1535,15 +1515,13 @@ function toggleScratch() {
   overlay.classList.toggle('show');
   if (overlay.classList.contains('show')) {
     setTimeout(setupScratch, 50);
-    SoundEngine.play('pop');
   }
 }
 function clearScratch() {
   const canvas = document.getElementById('scratchCanvas');
   canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-  SoundEngine.play('error');
 }
-function setStroke(c) { strokeColor = c; SoundEngine.play('pop'); }
+function setStroke(c) { strokeColor = c; }
 
 // ============================================================
 // DATA
@@ -1751,7 +1729,6 @@ function buildNav() {
 // SECTION SWITCH
 // ============================================================
 function showSection(idx) {
-  SoundEngine.play('pop');
   document.querySelectorAll('.section-panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('sec-'+idx).classList.add('active');
   
@@ -1787,8 +1764,6 @@ function showSection(idx) {
 // ============================================================
 function addStar(n=1) {
   stars+=n;
-  SoundEngine.play('ding');
-  SoundEngine.vibrate(100);
   Buddy.talk('star');
   Buddy.levelUp();
   
@@ -2375,15 +2350,15 @@ function checkSpeed(){
   clearInterval(speedInterval);
   const inp=document.getElementById('sInput');if(!inp)return;
   const ans=+inp.value;const fb=document.getElementById('sFeedback');
-  if(ans===speedCurrent.a){fb.textContent='✅ Correct! +1 star!';fb.style.color='var(--green)';speedScore++;addStar(1);SoundEngine.play('ding');Buddy.talk('correct');}
-  else{fb.textContent=`❌ Answer was ${speedCurrent.a}`;fb.style.color='var(--red)';SoundEngine.play('error');Buddy.talk('wrong');}
+  if(ans===speedCurrent.a){fb.textContent='✅ Correct! +1 star!';fb.style.color='var(--green)';speedScore++;addStar(1);Buddy.talk('correct');}
+  else{fb.textContent=`❌ Answer was ${speedCurrent.a}`;fb.style.color='var(--red)';Buddy.talk('wrong');}
   speedQNum++;
   setTimeout(showSpeedQ,1000);
 }
 
 function skipSpeedQ(){
   const fb=document.getElementById('sFeedback');
-  if(fb){fb.textContent=`⏰ Time's up! Answer was ${speedCurrent.a}`;fb.style.color='var(--red)';SoundEngine.play('error');}
+  if(fb){fb.textContent=`⏰ Time's up! Answer was ${speedCurrent.a}`;fb.style.color='var(--red)';}
   speedQNum++;setTimeout(showSpeedQ,1000);
 }
 
@@ -2428,12 +2403,10 @@ function checkShare(){
         if(shareInBox1 === shareInBox2){
             status.textContent = `🎉 Perfect! ${shareTotal} ÷ 2 = ${shareInBox1} each!`;
             status.style.color = 'var(--green)';
-            SoundEngine.play('ding');
             addStar(2);
         } else {
             status.textContent = `❌ Not equal! ${shareInBox1} vs ${shareInBox2}. Try again!`;
             status.style.color = 'var(--red)';
-            SoundEngine.play('error');
         }
     } else {
         status.textContent = `Sharing... ${remaining} left!`;
@@ -2448,7 +2421,6 @@ function addTally(type){
     if(type === '🍎') tallyA++;
     else tallyB++;
     updateTally();
-    SoundEngine.play('pop');
 }
 function updateTally(){
     const tA = document.getElementById('tallyA');
@@ -2478,7 +2450,6 @@ function updateTally(){
     bB.style.height = (tallyB * 15) + 'px';
     
     if(tallyA + tallyB === 10) {
-        SoundEngine.play('ding');
         addStar(1);
     }
 }
@@ -2496,7 +2467,6 @@ function addPV(type){
     if(type === 'T' && pvT < 9) pvT++;
     if(type === 'U' && pvU < 9) pvU++;
     updatePVDisplay();
-    SoundEngine.play('pop');
 }
 function updatePVDisplay(){
     const h = document.getElementById('pvH');
@@ -2510,7 +2480,7 @@ function updatePVDisplay(){
     for(let i=0; i<pvU; i++) u.innerHTML += '<div style="width:12px;height:12px;background:var(--orange);border:2px solid #fff;border-radius:2px;"></div>';
     
     tot.textContent = (pvH * 100) + (pvT * 10) + pvU;
-    if(tot.textContent > 0 && tot.textContent % 100 === 0) { SoundEngine.play('ding'); addStar(1); }
+    if(tot.textContent > 0 && tot.textContent % 100 === 0) { addStar(1); }
 }
 function resetPV(){ pvH=0; pvT=0; pvU=0; updatePVDisplay(); }
 
@@ -2540,13 +2510,11 @@ function checkCompare(sign){
     if(correct){
         fb.textContent = '🎉 Yes! The gator is happy!';
         fb.style.color = 'var(--green)';
-        SoundEngine.play('ding');
         addStar(1);
         setTimeout(newCompare, 2000);
     } else {
         fb.textContent = '❌ Try again! Look closely!';
         fb.style.color = 'var(--red)';
-        SoundEngine.play('error');
     }
 }
 
@@ -2556,7 +2524,6 @@ function checkCompare(sign){
 function showCert(){
     document.getElementById('certDate').textContent = new Date().toLocaleDateString();
     document.getElementById('certOverlay').classList.add('show');
-    SoundEngine.play('ding');
     launchConfetti();
 }
 function closeCert(){
@@ -2586,7 +2553,6 @@ function newQuiz(sIdx) {
         fbEl.className = 'quiz-fb good';
         fbEl.textContent = '🌟 Correct! You are amazing!';
         fbEl.style.display = 'block';
-        SoundEngine.play('ding');
         Buddy.talk('correct');
         addStar(1);
       } else {
@@ -2594,8 +2560,6 @@ function newQuiz(sIdx) {
         fbEl.className = 'quiz-fb bad';
         fbEl.textContent = `❌ Not quite! The answer is ${qObj.a}.`;
         fbEl.style.display = 'block';
-        SoundEngine.play('error');
-        SoundEngine.vibrate(50);
         Buddy.talk('wrong');
       }
     };
@@ -2628,10 +2592,10 @@ function buddyTalk() {
   Buddy.talk('idle');
 }
 
-// Global click listener for general pops
+// Global click listener for general interactions
 window.addEventListener('click', (e) => {
   if (e.target.tagName === 'BUTTON' || e.target.closest('.card-grid > div')) {
-    SoundEngine.play('pop');
+    // Interaction tracked
   }
 });
 </script>
