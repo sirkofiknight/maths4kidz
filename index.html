@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3067/3067167.png">
@@ -39,27 +39,33 @@
   overflow-wrap: break-word;
 }
 html, body {
-  height: 100vh;
+  height: 100%;
   height: -webkit-fill-available;
+  margin: 0;
+  padding: 0;
   overflow: hidden;
-  scroll-behavior: smooth;
+  width: 100%;
 }
 body {
   background: #ffffff;
   font-family: 'Nunito', sans-serif;
-  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   display: flex;
   flex-direction: column;
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  overflow: hidden;
 }
 
 /* ===== LAYOUT ===== */
 .app-shell {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  height: -webkit-fill-available;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
+  position: relative;
 }
 
 /* ===== HEADER ===== */
@@ -139,6 +145,8 @@ body {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   background: #f7f9fc;
+  overscroll-behavior-y: contain;
+  scroll-behavior: smooth;
 }
 @media(min-width:768px){
   .main-content{padding:28px 28px 40px;}
