@@ -1,0 +1,17 @@
+{
+  "name": "Maths Adventure!",
+  "short_name": "MathsAdv",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#4F46E5",
+  "theme_color": "#4F46E5",
+  "description": "Fun interactive maths learning for kids!",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3067/3067167.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
