@@ -1,5 +1,5 @@
 const CACHE_NAME = 'maths-adv-v1';
-const assets = ['./', './index.html'];
+const assets = ['./', './index.html', './style.css', './app.js'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(assets)));
