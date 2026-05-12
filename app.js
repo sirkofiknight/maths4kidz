@@ -1,27 +1,4 @@
 
-// ============================================================
-// PREMIUM AUDIO SYSTEM
-// ============================================================
-const Sound = {
-  ctx: null,
-  init() { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
-  play(freq, type, dur) {
-    this.init();
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.type = type; osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-    gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + dur);
-    osc.connect(gain); gain.connect(this.ctx.destination);
-    osc.start(); osc.stop(this.ctx.currentTime + dur);
-  },
-  correct() { this.play(523.25, 'sine', 0.3); setTimeout(()=>this.play(659.25, 'sine', 0.4), 100); },
-  wrong() { this.play(220, 'triangle', 0.5); },
-  reward() { 
-    const notes = [523, 659, 783, 1046];
-    notes.forEach((n,i) => setTimeout(()=>this.play(n, 'sine', 0.5), i*100));
-  }
-};
 
 // ============================================================
 // ACHIEVEMENTS SYSTEM
@@ -52,7 +29,6 @@ function checkAchievements(type, val) {
 }
 
 function showBadgePopup(a) {
-  Sound.reward();
   const overlay = document.getElementById('popupOverlay');
   document.getElementById('popEmoji').textContent = '🎖️';
   document.getElementById('popTitle').textContent = 'Badge Earned!';
@@ -118,10 +94,6 @@ function progressChallenge(type, amt = 1) {
     localStorage.setItem('maths_daily_progress', dailyProgress);
     updateChallengeUI();
     
-    if (dailyProgress >= currentChallenge.goal) {
-      localStorage.setItem('maths_daily_done', 'true');
-      Sound.reward();
-      alert("Daily Challenge Complete! 🏆 +5 Bonus Stars!");
       addStar(5);
       document.getElementById('dailyChallenge').style.animation = 'fadeUp 0.5s reverse forwards';
       setTimeout(() => document.getElementById('dailyChallenge').style.display = 'none', 500);
@@ -799,8 +771,7 @@ function buildPizza(n){
     slice.innerHTML = '<span style="position:absolute;top:20%;left:20%;font-size:1.5rem;transform:skewY(-'+(90-(360/n))+'deg) rotate(-45deg);">🍕</span>';
     slice.onclick = () => {
       if(slice.style.opacity !== '0'){
-        slice.style.opacity = '0'; slice.style.transform += ' scale(0.5)';
-        pizzaEaten++; updatePizzaInfo(); Sound.play(400, 'sine', 0.1);
+        pizzaEaten++; updatePizzaInfo();
       }
     };
     cont.appendChild(slice);
@@ -1043,10 +1014,12 @@ function checkSpeed(){
     fb.style.color='var(--green)';
     speedScore++;
     addStar(1);
-    Sound.correct();
     progressChallenge('speed', 1);
   }
-  else{fb.textContent=`❌ Answer was ${speedCurrent.a}`;fb.style.color='var(--red)';Sound.wrong();}
+  else{
+    fb.textContent=`❌ Answer was ${speedCurrent.a}`;
+    fb.style.color='var(--red)';
+  }
   speedQNum++;
   setTimeout(showSpeedQ,1000);
 }
@@ -1227,20 +1200,6 @@ function checkCompare(sign){
     }
 }
 
-// ============================================================
-// THEME SWITCHER
-// ============================================================
-let currentTheme = localStorage.getItem('maths_theme') || 'light';
-document.body.className = currentTheme + '-theme';
-
-function toggleTheme() {
-  const themes = ['light', 'dark', 'cosmic'];
-  const idx = (themes.indexOf(currentTheme) + 1) % themes.length;
-  currentTheme = themes[idx];
-  document.body.className = currentTheme + '-theme';
-  localStorage.setItem('maths_theme', currentTheme);
-  Sound.play(880, 'sine', 0.1);
-}
 
 // ============================================================
 // BADGE DISPLAY
@@ -1343,31 +1302,11 @@ window.addEventListener('click', (e) => {
 // ============================================================
 // ONBOARDING LOGIC
 // ============================================================
-let currentOnboardingSlide = 0;
 function showOnboarding() {
   document.getElementById('onboardingOverlay').classList.add('show');
-}
-function nextOnboarding() {
-  const slides = document.querySelectorAll('.onboarding-slide');
-  const dots = document.querySelectorAll('.onboarding-dots .dot');
-  
-  if (currentOnboardingSlide < slides.length - 1) {
-    slides[currentOnboardingSlide].classList.remove('active');
-    dots[currentOnboardingSlide].classList.remove('active');
-    currentOnboardingSlide++;
-    slides[currentOnboardingSlide].classList.add('active');
-    dots[currentOnboardingSlide].classList.add('active');
-    if (currentOnboardingSlide === slides.length - 1) {
-      document.getElementById('onboardingBtn').textContent = "Get Started";
-    }
-    Sound.play(600, 'sine', 0.1);
-  } else {
-    finishOnboarding();
-  }
 }
 function finishOnboarding() {
   localStorage.setItem('maths_adv_onboarded', 'true');
   document.getElementById('onboardingOverlay').style.animation = 'fadeUp 0.5s reverse forwards';
   setTimeout(() => document.getElementById('onboardingOverlay').classList.remove('show'), 500);
-  Sound.reward();
 }

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3067/3067167.png">
+<link rel="icon" href="https://cdn-icons-png.flaticon.com/512/2344/2344132.png">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#4F46E5">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -18,7 +18,7 @@
 
 <header class="app-header">
   <div class="header-left">
-    <div class="app-logo">🚀</div>
+    <div class="app-logo"><img src="logo.png" alt="Logo" style="height:40px;width:auto;"></div>
     <div class="header-text">
       <div class="app-title">Maths Adventure!</div>
     </div>
@@ -26,7 +26,6 @@
   <div class="header-stars" onclick="openParentalGate('report')">
     <span>⭐</span> <span id="starCount">0</span>
   </div>
-  <div class="header-theme" onclick="toggleTheme()" title="Switch Theme">🌓</div>
   <div class="header-progress">
     <div class="header-progress-inner" id="progBar"></div>
   </div>
@@ -751,7 +750,7 @@
         <p style="font-family:'Baloo 2';font-size:2rem;color:var(--indigo);font-weight:900;margin:10px 0;">SUPER GENIUS</p>
         <p style="color:#666;font-weight:700;">for earning <span style="color:var(--orange);font-size:1.5rem;">100 STARS</span> in Maths Adventure!</p>
         <div style="display:flex;justify-content:center;gap:20px;margin-top:20px;">
-            <div style="border-top:2px solid #ccc;padding-top:5px;font-size:0.8rem;">Signed: Buddy the Robot</div>
+            <div style="border-top:2px solid #ccc;padding-top:5px;font-size:0.8rem;">Signed: Head of Mathematics</div>
             <div style="border-top:2px solid #ccc;padding-top:5px;font-size:0.8rem;">Date: <span id="certDate"></span></div>
         </div>
     </div>
@@ -773,33 +772,17 @@
 <div class="onboarding-overlay" id="onboardingOverlay">
   <div class="onboarding-container">
     <div class="onboarding-slides" id="onboardingSlides">
-      <!-- Slide 1 -->
+      <!-- Single Onboarding Slide -->
       <div class="onboarding-slide active">
+        <img src="logo.png" alt="Maths Adventure Logo" class="onboarding-logo" style="width:140px; margin-bottom:20px;">
         <img src="C:\Users\richa\.gemini\antigravity\brain\7c0b0051-3f29-4a1d-9da6-8ec2db1b5224\formal_onboarding_1_1778545286757.png" alt="Welcome">
         <h2>Mathematical Excellence</h2>
-        <p>A comprehensive platform designed to foster critical thinking and mathematical proficiency in young learners.</p>
-      </div>
-      <!-- Slide 2 -->
-      <div class="onboarding-slide">
-        <img src="C:\Users\richa\.gemini\antigravity\brain\7c0b0051-3f29-4a1d-9da6-8ec2db1b5224\formal_onboarding_2_1778545313911.png" alt="Rewards">
-        <h2>Structured Achievement</h2>
-        <p>Track progress through our rigorous milestone system and earn recognition for demonstrated mastery of concepts.</p>
-      </div>
-      <!-- Slide 3 -->
-      <div class="onboarding-slide">
-        <img src="C:\Users\richa\.gemini\antigravity\brain\7c0b0051-3f29-4a1d-9da6-8ec2db1b5224\formal_onboarding_3_1778545398186.png" alt="Mastery">
-        <h2>Curriculum Focused</h2>
-        <p>Engage with interactive modules covering arithmetic, geometry, and data analysis, aligned with global standards.</p>
+        <p>A comprehensive platform designed to foster critical thinking and mathematical proficiency through structured learning and concept mastery.</p>
       </div>
     </div>
     
     <div class="onboarding-footer">
-      <div class="onboarding-dots" id="onboardingDots">
-        <div class="dot active"></div>
-        <div class="dot"></div>
-        <div class="dot"></div>
-      </div>
-      <button class="btn btn-indigo" id="onboardingBtn" onclick="nextOnboarding()">Proceed</button>
+      <button class="btn btn-indigo" id="onboardingBtn" onclick="finishOnboarding()">Enter Classroom</button>
     </div>
   </div>
 </div>
