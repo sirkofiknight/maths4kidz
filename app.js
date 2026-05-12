@@ -93,7 +93,8 @@ function progressChallenge(type, amt = 1) {
     dailyProgress += amt;
     localStorage.setItem('maths_daily_progress', dailyProgress);
     updateChallengeUI();
-    
+    if (dailyProgress >= currentChallenge.goal) {
+      localStorage.setItem('maths_daily_done', 'true');
       addStar(5);
       document.getElementById('dailyChallenge').style.animation = 'fadeUp 0.5s reverse forwards';
       setTimeout(() => document.getElementById('dailyChallenge').style.display = 'none', 500);
@@ -234,7 +235,6 @@ window.addEventListener('DOMContentLoaded', () => {
   buildCoins();
   buildShop();
   buildTimesTable();
-  buildCalendar();
   resetCookies();
   newPattern();
   startSkip(2);
@@ -253,6 +253,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }
   
   localStorage.setItem('maths_adv_returning', 'true');
+  showSection(0);
 });
 
 // ============================================================
@@ -358,9 +359,6 @@ function showSection(idx) {
   document.querySelectorAll('.section-panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('sec-'+idx).classList.add('active');
   
-  if (idx !== currentSec) {
-    Buddy.talk('greet');
-  }
 
   document.querySelectorAll('.side-nav-item').forEach((b,i)=>{
     b.classList.remove('active');
