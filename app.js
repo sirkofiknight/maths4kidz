@@ -1,26 +1,133 @@
-const Buddy = {
-  emojis: ['🤖','🐉','🦄','🦁','🐼','🦊'],
-  current: '🤖',
-  messages: {
-    greet: ["Hello! Ready for math?", "Let's explore numbers!", "You're doing great!"],
-    correct: ["Amazing! You're a genius!", "Wow! So smart!", "Brilliant! Keep going!", "You're on fire! 🔥"],
-    wrong: ["Don't worry, try again!", "Almost! You can do it!", "Math is fun, let's try once more!", "Think carefully, you've got this!"],
-    star: ["A shiny star for you! ⭐", "You've earned a reward!", "Look at your progress! Awesome!"],
-    idle: ["Tap me for a surprise!", "What should we learn next?", "Math makes your brain strong! 🧠"]
+
+// ============================================================
+// PREMIUM AUDIO SYSTEM
+// ============================================================
+const Sound = {
+  ctx: null,
+  init() { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+  play(freq, type, dur) {
+    this.init();
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = type; osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+    gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + dur);
+    osc.connect(gain); gain.connect(this.ctx.destination);
+    osc.start(); osc.stop(this.ctx.currentTime + dur);
   },
-  talk(type) {
-    const box = document.getElementById('buddyMsg');
-    const msgs = this.messages[type] || this.messages.idle;
-    box.textContent = msgs[Math.floor(Math.random() * msgs.length)];
-    box.classList.add('show');
-    if (this.timer) clearTimeout(this.timer);
-    this.timer = setTimeout(() => box.classList.remove('show'), 3500);
-  },
-  levelUp() {
-    this.current = this.emojis[Math.floor(stars / 10) % this.emojis.length];
-    document.getElementById('buddyAvatar').textContent = this.current;
+  correct() { this.play(523.25, 'sine', 0.3); setTimeout(()=>this.play(659.25, 'sine', 0.4), 100); },
+  wrong() { this.play(220, 'triangle', 0.5); },
+  reward() { 
+    const notes = [523, 659, 783, 1046];
+    notes.forEach((n,i) => setTimeout(()=>this.play(n, 'sine', 0.5), i*100));
   }
 };
+
+// ============================================================
+// ACHIEVEMENTS SYSTEM
+// ============================================================
+const ACHIEVEMENTS = [
+  {id:'first_star', name:'Rising Star', icon:'⭐', desc:'Earn your very first star!', goal:1},
+  {id:'star_10', name:'Ten-tastic!', icon:'🔟', desc:'Collect 10 stars!', goal:10},
+  {id:'star_50', name:'Maths pro', icon:'🎓', desc:'Collect 50 stars!', goal:50},
+  {id:'star_100', name:'Legendary Genius', icon:'🏆', desc:'Reach 100 stars!', goal:100},
+  {id:'speed_demon', name:'Speed Demon', icon:'⚡', desc:'Score 10/10 in Speed Quiz!', goal: 10, type:'speed'},
+  {id:'perfect_sharing', name:'Master Sharer', icon:'🍎', desc:'Share apples perfectly!', goal: 5, type:'share'}
+];
+let earnedBadges = [];
+
+function checkAchievements(type, val) {
+  ACHIEVEMENTS.forEach(a => {
+    if (earnedBadges.includes(a.id)) return;
+    let earned = false;
+    if (!a.type && type === 'stars' && stars >= a.goal) earned = true;
+    if (a.type === type && val >= a.goal) earned = true;
+
+    if (earned) {
+      earnedBadges.push(a.id);
+      showBadgePopup(a);
+      saveData();
+    }
+  });
+}
+
+function showBadgePopup(a) {
+  Sound.reward();
+  const overlay = document.getElementById('popupOverlay');
+  document.getElementById('popEmoji').textContent = '🎖️';
+  document.getElementById('popTitle').textContent = 'Badge Earned!';
+  document.getElementById('popMsg').innerHTML = `
+    <div style="padding:15px;background:var(--indigo-l);border-radius:20px;margin-bottom:10px;">
+      <div style="font-size:3rem;margin-bottom:10px;">${a.icon}</div>
+      <div style="font-weight:900;color:var(--indigo-d);font-size:1.2rem;">${a.name}</div>
+      <div style="color:var(--indigo-d);font-size:0.9rem;">${a.desc}</div>
+    </div>
+  `;
+  overlay.classList.add('show');
+  launchConfetti();
+}
+
+// ============================================================
+// DAILY CHALLENGE SYSTEM
+// ============================================================
+const CHALLENGES = [
+  {text: "Earn 5 stars today!", goal: 5, type: 'stars'},
+  {text: "Earn 10 stars today!", goal: 10, type: 'stars'},
+  {text: "Solve 3 speed quiz questions!", goal: 3, type: 'speed'},
+  {text: "Collect 20 stars for a big reward!", goal: 20, type: 'stars'}
+];
+let dailyProgress = 0, currentChallenge = null;
+
+function initDailyChallenge() {
+  const today = new Date().toDateString();
+  const saved = localStorage.getItem('maths_daily_date');
+  
+  if (saved !== today) {
+    const idx = Math.floor(Math.random() * CHALLENGES.length);
+    currentChallenge = CHALLENGES[idx];
+    dailyProgress = 0;
+    localStorage.setItem('maths_daily_date', today);
+    localStorage.setItem('maths_daily_idx', idx);
+    localStorage.setItem('maths_daily_progress', 0);
+    localStorage.setItem('maths_daily_done', 'false');
+  } else {
+    const idx = localStorage.getItem('maths_daily_idx');
+    currentChallenge = CHALLENGES[idx];
+    dailyProgress = parseInt(localStorage.getItem('maths_daily_progress')) || 0;
+  }
+  
+  if (localStorage.getItem('maths_daily_done') === 'true') {
+    document.getElementById('dailyChallenge').style.display = 'none';
+  } else {
+    updateChallengeUI();
+  }
+}
+
+function updateChallengeUI() {
+  const el = document.getElementById('dailyChallenge');
+  if(!el) return;
+  el.style.display = 'block';
+  document.getElementById('challengeText').textContent = currentChallenge.text;
+  document.getElementById('challengeStatus').textContent = `${dailyProgress} / ${currentChallenge.goal}`;
+}
+
+function progressChallenge(type, amt = 1) {
+  if (localStorage.getItem('maths_daily_done') === 'true') return;
+  if (currentChallenge.type === type) {
+    dailyProgress += amt;
+    localStorage.setItem('maths_daily_progress', dailyProgress);
+    updateChallengeUI();
+    
+    if (dailyProgress >= currentChallenge.goal) {
+      localStorage.setItem('maths_daily_done', 'true');
+      Sound.reward();
+      alert("Daily Challenge Complete! 🏆 +5 Bonus Stars!");
+      addStar(5);
+      document.getElementById('dailyChallenge').style.animation = 'fadeUp 0.5s reverse forwards';
+      setTimeout(() => document.getElementById('dailyChallenge').style.display = 'none', 500);
+    }
+  }
+}
 
 // ============================================================
 // SCRATCHPAD LOGIC
@@ -148,8 +255,8 @@ window.addEventListener('DOMContentLoaded', () => {
   updateMult();
   buildShapes();
   buildAngleCards();
-  buildClock();
-  buildFractions();
+  buildCalendar();
+  buildPizza(4);
   buildRuler();
   buildThermo();
   buildCoins();
@@ -167,18 +274,20 @@ window.addEventListener('DOMContentLoaded', () => {
   resetPV();
   newCompare();
   newBond();
+  initDailyChallenge();
 
-  if(!localStorage.getItem('maths_adv_returning')){
-    Buddy.talk('greet');
-    localStorage.setItem('maths_adv_returning', 'true');
+  if(!localStorage.getItem('maths_adv_onboarded')){
+    showOnboarding();
   }
+  
+  localStorage.setItem('maths_adv_returning', 'true');
 });
 
 // ============================================================
 // STORAGE ENGINE (Production Ready)
 // ============================================================
 function saveData() {
-    const data = { stars, buddy: Buddy.current, date: new Date().toISOString() };
+    const data = { stars, earnedBadges, date: new Date().toISOString() };
     localStorage.setItem('maths_adventure_v1', JSON.stringify(data));
 }
 function loadData() {
@@ -186,9 +295,8 @@ function loadData() {
     if(raw){
         const data = JSON.parse(raw);
         stars = data.stars || 0;
-        Buddy.current = data.buddy || '🤖';
+        earnedBadges = data.earnedBadges || [];
         document.getElementById('starCount').textContent = stars;
-        document.getElementById('buddyAvatar').textContent = Buddy.current;
         const pct=Math.min(stars*2.5,100);
         const progBar = document.getElementById('progBar');
         if(progBar) progBar.style.width=pct+'%';
@@ -310,8 +418,8 @@ function showSection(idx) {
 // ============================================================
 function addStar(n=1) {
   stars+=n;
-  Buddy.talk('star');
-  Buddy.levelUp();
+  checkAchievements('stars');
+  progressChallenge('stars', n);
   
   document.getElementById('starCount').textContent=stars;
   const pct=Math.min(stars*2.5,100);
@@ -670,35 +778,39 @@ function buildCalendar(){
 }
 
 // ============================================================
-// FRACTIONS
+// PIZZA SLICER (Fractions)
 // ============================================================
-const FRACS=[
-  {label:'Whole',sym:'1',num:1,den:1,color:'#EF4444',emoji:'🍕',explain:'The WHOLE pizza! Nothing is cut. All 1 piece is yours! 😊'},
-  {label:'Half',sym:'½',num:1,den:2,color:'#F97316',emoji:'🍰',explain:'Cut into 2 EQUAL parts. 1 half = 1 out of 2 pieces! Like sharing a sandwich! 🥪'},
-  {label:'Third',sym:'⅓',num:1,den:3,color:'#22C55E',emoji:'🍫',explain:'Cut into 3 EQUAL parts. 1 third = 1 out of 3! Share chocolate with 2 friends! 🍫'},
-  {label:'Quarter',sym:'¼',num:1,den:4,color:'#3B82F6',emoji:'🥧',explain:'Cut into 4 EQUAL parts. 1 quarter = 1 out of 4! Share pizza with 3 friends! 🍕'},
-  {label:'Fifth',sym:'⅕',num:1,den:5,color:'#6366F1',emoji:'🍩',explain:'Cut into 5 EQUAL parts! 1 fifth = 1 out of 5! Share a donut with 4 friends! 🍩'},
-  {label:'Two Thirds',sym:'⅔',num:2,den:3,color:'#A855F7',emoji:'🥜',explain:'2 out of 3 equal pieces! More than half but not the whole! 🥜'},
-  {label:'Three Quarters',sym:'¾',num:3,den:4,color:'#EC4899',emoji:'🍦',explain:'3 out of 4 equal pieces! Almost all! Just one quarter missing! 🍦'},
-  {label:'Four Fifths',sym:'⅘',num:4,den:5,color:'#F59E0B',emoji:'🍇',explain:'4 out of 5 equal pieces! Very nearly the whole thing! 🍇'},
-];
-function buildFractions(){
-  const g=document.getElementById('fracGrid');
-  if(!g) return;
-  FRACS.forEach(f=>{
-    const pct=Math.round((f.num/f.den)*100);
-    const card=document.createElement('div');card.className='frac-card';card.style.borderColor=f.color;
-    card.innerHTML=`<div class="frac-emoji">${f.emoji}</div>
-      <div class="frac-bar-wrap"><div class="frac-bar-fill" style="width:${pct}%;background:${f.color}"></div></div>
-      <div class="frac-label" style="color:${f.color}">${f.sym}</div>
-      <div class="frac-pct">${pct}%</div>`;
-    card.onclick=()=>{
-      const e=document.getElementById('fracExplain');e.style.display='block';
-      e.innerHTML=`<strong style="color:${f.color}">${f.emoji} ${f.label} (${f.sym}):</strong> ${f.explain}`;
-      card.style.transform='scale(1.06)';setTimeout(()=>card.style.transform='',300);
+let pizzaSlices = 4, pizzaEaten = 0;
+function buildPizza(n){
+  pizzaSlices = n; pizzaEaten = 0;
+  const cont = document.getElementById('pizzaCont');
+  if(!cont) return;
+  cont.innerHTML = '';
+  updatePizzaInfo();
+  
+  for(let i=0; i<n; i++){
+    const slice = document.createElement('div');
+    slice.style.cssText = `
+      position:absolute; top:0; left:50%; width:50%; height:100%;
+      background:#FCD34D; border:1px solid #D97706;
+      transform-origin:left center; transform:rotate(${(i*360/n)}deg) skewY(${90-(360/n)}deg);
+      cursor:pointer; transition:all 0.3s;
+    `;
+    slice.innerHTML = '<span style="position:absolute;top:20%;left:20%;font-size:1.5rem;transform:skewY(-'+(90-(360/n))+'deg) rotate(-45deg);">🍕</span>';
+    slice.onclick = () => {
+      if(slice.style.opacity !== '0'){
+        slice.style.opacity = '0'; slice.style.transform += ' scale(0.5)';
+        pizzaEaten++; updatePizzaInfo(); Sound.play(400, 'sine', 0.1);
+      }
     };
-    g.appendChild(card);
-  });
+    cont.appendChild(slice);
+  }
+}
+function updatePizzaInfo(){
+  const info = document.getElementById('pizzaInfo');
+  const left = pizzaSlices - pizzaEaten;
+  info.textContent = `You have ${left} / ${pizzaSlices} slices left!`;
+  if(left === 0) { info.textContent = "All gone! 😋"; addStar(1); }
 }
 
 // ============================================================
@@ -926,8 +1038,15 @@ function checkSpeed(){
   clearInterval(speedInterval);
   const inp=document.getElementById('sInput');if(!inp)return;
   const ans=+inp.value;const fb=document.getElementById('sFeedback');
-  if(ans===speedCurrent.a){fb.textContent='✅ Correct! +1 star!';fb.style.color='var(--green)';speedScore++;addStar(1);Buddy.talk('correct');}
-  else{fb.textContent=`❌ Answer was ${speedCurrent.a}`;fb.style.color='var(--red)';Buddy.talk('wrong');}
+  if(ans===speedCurrent.a){
+    fb.textContent='✅ Correct! +1 star!';
+    fb.style.color='var(--green)';
+    speedScore++;
+    addStar(1);
+    Sound.correct();
+    progressChallenge('speed', 1);
+  }
+  else{fb.textContent=`❌ Answer was ${speedCurrent.a}`;fb.style.color='var(--red)';Sound.wrong();}
   speedQNum++;
   setTimeout(showSpeedQ,1000);
 }
@@ -940,6 +1059,7 @@ function skipSpeedQ(){
 
 function endSpeed(){
     const area=document.getElementById('speedArea');
+    checkAchievements('speed', speedScore);
     area.innerHTML = `
         <div style="text-align:center;padding:20px;">
             <div style="font-size:3rem;">🏆</div>
@@ -995,6 +1115,7 @@ function checkShare(){
             status.textContent = `🎉 Perfect! ${shareTotal} ÷ 2 = ${shareInBox1} each!`;
             status.style.color = 'var(--green)';
             addStar(2);
+            checkAchievements('share', 1);
         } else {
             status.textContent = `❌ Not equal! ${shareInBox1} vs ${shareInBox2}. Try again!`;
             status.style.color = 'var(--red)';
@@ -1107,6 +1228,46 @@ function checkCompare(sign){
 }
 
 // ============================================================
+// THEME SWITCHER
+// ============================================================
+let currentTheme = localStorage.getItem('maths_theme') || 'light';
+document.body.className = currentTheme + '-theme';
+
+function toggleTheme() {
+  const themes = ['light', 'dark', 'cosmic'];
+  const idx = (themes.indexOf(currentTheme) + 1) % themes.length;
+  currentTheme = themes[idx];
+  document.body.className = currentTheme + '-theme';
+  localStorage.setItem('maths_theme', currentTheme);
+  Sound.play(880, 'sine', 0.1);
+}
+
+// ============================================================
+// BADGE DISPLAY
+// ============================================================
+function updateBadgeGrid() {
+  const grid = document.getElementById('badgeGrid');
+  if(!grid) return;
+  grid.innerHTML = '';
+  ACHIEVEMENTS.forEach(a => {
+    const isEarned = earnedBadges.includes(a.id);
+    const item = document.createElement('div');
+    item.className = 'badge-item' + (isEarned ? ' earned' : '');
+    item.innerHTML = `
+      <div class="badge-icon">${a.icon}</div>
+      <div class="badge-name">${a.name}</div>
+    `;
+    item.title = isEarned ? a.desc : 'Keep learning to unlock!';
+    grid.appendChild(item);
+  });
+}
+
+function showBadges() {
+  updateBadgeGrid();
+  document.getElementById('badgeOverlay').classList.add('show');
+}
+
+// ============================================================
 // CERTIFICATE
 // ============================================================
 function showCert(){
@@ -1142,14 +1303,12 @@ function newQuiz(sIdx) {
         fbEl.className = 'quiz-fb good';
         fbEl.textContent = '🌟 Correct! You are amazing!';
         fbEl.style.display = 'block';
-        Buddy.talk('correct');
         addStar(1);
       } else {
         btn.classList.add('wrong');
         fbEl.className = 'quiz-fb bad';
         fbEl.textContent = `❌ Not quite! The answer is ${qObj.a}.`;
         fbEl.style.display = 'block';
-        Buddy.talk('wrong');
       }
     };
     optsEl.appendChild(btn);
@@ -1163,19 +1322,16 @@ function showMasteryReport(){
     document.getElementById('popMsg').innerHTML = `
         <div style="text-align:left;font-size:0.9rem;font-weight:700;">
             <p>🌟 Total Stars: ${stars}</p>
-            <p>🤖 Buddy Level: ${Buddy.current}</p>
             <p>🚀 Progress: ${Math.round(Math.min(stars*2.5,100))}%</p>
             <hr style="margin:10px 0;border:none;border-top:1px solid #eee;">
             <p style="color:#666;font-size:0.8rem;margin-bottom:15px;">Keep up the great work! You are becoming a Maths Master!</p>
+            <button class="btn btn-indigo btn-sm" style="width:100%;margin-bottom:8px;" onclick="showBadges()">🏆 View My Badges</button>
             <button class="btn btn-red btn-sm" style="width:100%;font-size:0.7rem;" onclick="resetAllProgress()">⚠️ Reset All Progress</button>
         </div>
     `;
     overlay.classList.add('show');
 }
 
-function buddyTalk() {
-  Buddy.talk('idle');
-}
 
 // Global click listener for general interactions
 window.addEventListener('click', (e) => {
@@ -1183,3 +1339,35 @@ window.addEventListener('click', (e) => {
     // Interaction tracked
   }
 });
+
+// ============================================================
+// ONBOARDING LOGIC
+// ============================================================
+let currentOnboardingSlide = 0;
+function showOnboarding() {
+  document.getElementById('onboardingOverlay').classList.add('show');
+}
+function nextOnboarding() {
+  const slides = document.querySelectorAll('.onboarding-slide');
+  const dots = document.querySelectorAll('.onboarding-dots .dot');
+  
+  if (currentOnboardingSlide < slides.length - 1) {
+    slides[currentOnboardingSlide].classList.remove('active');
+    dots[currentOnboardingSlide].classList.remove('active');
+    currentOnboardingSlide++;
+    slides[currentOnboardingSlide].classList.add('active');
+    dots[currentOnboardingSlide].classList.add('active');
+    if (currentOnboardingSlide === slides.length - 1) {
+      document.getElementById('onboardingBtn').textContent = "Get Started";
+    }
+    Sound.play(600, 'sine', 0.1);
+  } else {
+    finishOnboarding();
+  }
+}
+function finishOnboarding() {
+  localStorage.setItem('maths_adv_onboarded', 'true');
+  document.getElementById('onboardingOverlay').style.animation = 'fadeUp 0.5s reverse forwards';
+  setTimeout(() => document.getElementById('onboardingOverlay').classList.remove('show'), 500);
+  Sound.reward();
+}

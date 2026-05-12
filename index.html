@@ -8,6 +8,7 @@
 <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3067/3067167.png">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#4F46E5">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Maths Adventure! 🚀</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Baloo+2:wght@400;600;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
@@ -25,6 +26,7 @@
   <div class="header-stars" onclick="openParentalGate('report')">
     <span>⭐</span> <span id="starCount">0</span>
   </div>
+  <div class="header-theme" onclick="toggleTheme()" title="Switch Theme">🌓</div>
   <div class="header-progress">
     <div class="header-progress-inner" id="progBar"></div>
   </div>
@@ -38,6 +40,18 @@
 
 <!-- MAIN CONTENT -->
 <main class="main-content" id="mainContent">
+
+<!-- DAILY CHALLENGE -->
+<div class="widget challenge-widget" id="dailyChallenge" style="background:linear-gradient(135deg, var(--indigo), var(--purple)); color:white; border:none; display:none;">
+  <div style="display:flex; align-items:center; gap:15px;">
+    <div style="font-size:2.5rem;">🎯</div>
+    <div style="flex:1;">
+      <div style="font-weight:900; font-size:1.1rem; text-transform:uppercase; letter-spacing:1px; opacity:0.9;">Daily Challenge</div>
+      <div id="challengeText" style="font-family:'Baloo 2'; font-size:1.3rem; font-weight:800; margin-top:4px;">Loading challenge...</div>
+    </div>
+    <div id="challengeStatus" style="background:rgba(255,255,255,0.2); padding:8px 15px; border-radius:15px; font-weight:900;">0 / 5</div>
+  </div>
+</div>
 
 <!-- ======= S0: COUNTING ======= -->
 <div class="section-panel active" id="sec-0">
@@ -309,23 +323,25 @@
   </div>
 
   <div class="card-grid">
-    <div class="info-card ic-pink"><span class="ic-emoji">½</span><h3>One Half (½)</h3><p>Cut something into 2 EQUAL parts. Each part is ONE HALF! Like sharing a sandwich! 🥪</p></div>
-    <div class="info-card ic-orange"><span class="ic-emoji">¼</span><h3>One Quarter (¼)</h3><p>Cut into 4 EQUAL parts. Each is ONE QUARTER! Sharing pizza with 3 friends! 🍕</p></div>
-    <div class="info-card ic-green"><span class="ic-emoji">⅓</span><h3>One Third (⅓)</h3><p>Cut into 3 EQUAL parts. Each is ONE THIRD! 3 friends share chocolate! 🍫</p></div>
-    <div class="info-card ic-blue"><span class="ic-emoji">🎯</span><h3>The Whole (1)</h3><p>When nothing is cut = the WHOLE! 2 halves = 1 whole. 4 quarters = 1 whole!</p></div>
-    <div class="info-card ic-purple"><span class="ic-emoji">📊</span><h3>Comparing Fractions</h3><p>½ is BIGGER than ¼! More equal pieces = smaller each piece! Imagine cutting a cake more and more ways!</p></div>
-    <div class="info-card ic-teal"><span class="ic-emoji">🔢</span><h3>Numerator & Denominator</h3><p>In ¾: the <strong>3</strong> (top) = how many pieces you have. The <strong>4</strong> (bottom) = how many equal pieces total!</p></div>
+    <div class="info-card ic-pink"><span class="ic-emoji">🍕</span><h3>The Whole</h3><p>One whole pizza! 1/1. It's all for you!</p></div>
+    <div class="info-card ic-blue"><span class="ic-emoji">🌓</span><h3>Halves</h3><p>Cut into 2 equal pieces. Each piece is 1/2!</p></div>
+    <div class="info-card ic-orange"><span class="ic-emoji">🍰</span><h3>Quarters</h3><p>Cut into 4 equal pieces. Each piece is 1/4!</p></div>
   </div>
 
   <div class="widget" style="background:#FDF2F8">
-    <h2 style="color:var(--pink)">🍕 Fraction Visualizer!</h2>
-    <p class="wdesc">Tap any fraction to see it as a bar and learn more!</p>
-    <div class="frac-grid" id="fracGrid"></div>
-    <div class="frac-explain" id="fracExplain"></div>
+    <h2 style="color:var(--pink)">🍕 Interactive Pizza Slicer</h2>
+    <p class="wdesc">Choose how many slices, then tap to eat!</p>
+    <div style="display:flex;justify-content:center;gap:10px;margin-bottom:20px;">
+        <button class="btn btn-pink btn-sm" onclick="buildPizza(2)">Halves (2)</button>
+        <button class="btn btn-purple btn-sm" onclick="buildPizza(4)">Quarters (4)</button>
+        <button class="btn btn-blue btn-sm" onclick="buildPizza(8)">Eighths (8)</button>
+    </div>
+    <div id="pizzaCont" style="position:relative;width:240px;height:240px;margin:0 auto;background:#eee;border-radius:50%;border:8px solid #D97706;overflow:hidden;"></div>
+    <div id="pizzaInfo" style="text-align:center;margin-top:20px;font-family:'Baloo 2',cursive;font-size:1.5rem;font-weight:900;color:var(--pink);"></div>
   </div>
 
-  <div class="widget" style="background:#F0FDF4">
-    <h2 style="color:var(--green)">🧠 Fractions Quiz!</h2>
+  <div class="widget" style="background:#EEF2FF">
+    <h2 style="color:var(--indigo)">🧠 Fraction Quiz!</h2>
     <div id="q5-q" class="quiz-q">Loading...</div>
     <div class="quiz-opts" id="q5-opts"></div>
     <div id="q5-fb" class="quiz-fb"></div>
@@ -689,11 +705,7 @@
 </div>
 </div>
 
-<!-- BUDDY -->
-<div class="buddy-container" id="buddyCont">
-  <div class="buddy-bubble" id="buddyMsg">Hello! Ready for math?</div>
-  <div class="buddy-avatar" id="buddyAvatar" onclick="buddyTalk()">🤖</div>
-</div>
+
 
 <!-- TOOLBOX FAB -->
 <div class="toolbox-fab" onclick="toggleScratch()">✏️</div>
@@ -744,6 +756,51 @@
         </div>
     </div>
     <button class="btn btn-indigo" style="margin-top:20px;" onclick="closeCert()">Keep Learning! 🚀</button>
+  </div>
+</div>
+
+
+<!-- TROPHY ROOM -->
+<div class="popup-overlay" id="badgeOverlay">
+  <div class="popup-card" style="max-width:400px;">
+    <div class="popup-title">My Trophies 🏆</div>
+    <div class="badge-grid" id="badgeGrid"></div>
+    <button class="btn btn-indigo" style="margin-top:20px;" onclick="document.getElementById('badgeOverlay').classList.remove('show')">Back to Fun!</button>
+  </div>
+</div>
+
+<!-- ONBOARDING OVERLAY -->
+<div class="onboarding-overlay" id="onboardingOverlay">
+  <div class="onboarding-container">
+    <div class="onboarding-slides" id="onboardingSlides">
+      <!-- Slide 1 -->
+      <div class="onboarding-slide active">
+        <img src="C:\Users\richa\.gemini\antigravity\brain\7c0b0051-3f29-4a1d-9da6-8ec2db1b5224\formal_onboarding_1_1778545286757.png" alt="Welcome">
+        <h2>Mathematical Excellence</h2>
+        <p>A comprehensive platform designed to foster critical thinking and mathematical proficiency in young learners.</p>
+      </div>
+      <!-- Slide 2 -->
+      <div class="onboarding-slide">
+        <img src="C:\Users\richa\.gemini\antigravity\brain\7c0b0051-3f29-4a1d-9da6-8ec2db1b5224\formal_onboarding_2_1778545313911.png" alt="Rewards">
+        <h2>Structured Achievement</h2>
+        <p>Track progress through our rigorous milestone system and earn recognition for demonstrated mastery of concepts.</p>
+      </div>
+      <!-- Slide 3 -->
+      <div class="onboarding-slide">
+        <img src="C:\Users\richa\.gemini\antigravity\brain\7c0b0051-3f29-4a1d-9da6-8ec2db1b5224\formal_onboarding_3_1778545398186.png" alt="Mastery">
+        <h2>Curriculum Focused</h2>
+        <p>Engage with interactive modules covering arithmetic, geometry, and data analysis, aligned with global standards.</p>
+      </div>
+    </div>
+    
+    <div class="onboarding-footer">
+      <div class="onboarding-dots" id="onboardingDots">
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <button class="btn btn-indigo" id="onboardingBtn" onclick="nextOnboarding()">Proceed</button>
+    </div>
   </div>
 </div>
 
